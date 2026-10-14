@@ -15,41 +15,67 @@ def cleanup_old_files():
     for f in os.listdir(SAVE_DIR):
         file_path = os.path.join(SAVE_DIR, f)
         if os.path.isfile(file_path):
-            # 24시간(86400초) 지나면 싹 다 지운다
             if now - os.path.getmtime(file_path) > 24 * 3600:
                 os.remove(file_path)
 
-# 사이트 열릴 때마다 묵은 파일 정리 한번 싹 해주기
 cleanup_old_files()
 
-st.title("📂 24시간 파일 공유소")
-st.write("마! 시원하게 스트림릿 기본 용량(200MB)까지 팍팍 올릴 수 있데이. 여러 개 한 번에 올리고 받을 수 있고, 24시간 지나면 싹 다 날아간데이.")
+st.title("📂 24시간 파일 & 텍스트 공유소")
+st.write("마! 파일도 올리고 텍스트도 복붙해서 나눌 수 있데이. 24시간 지나면 싹 다 날아간데이.")
 
-# 다중 파일 업로드
+# --- 텍스트 공유 부분 ---
+st.subheader("📝 텍스트 공유하기")
+shared_text = st.text_area("공유할 텍스트 여다가 팍팍 적어라", height=100)
+if st.button("텍스트 올리기"):
+    if shared_text.strip():
+        # 저장할 때 시간 달아서 파일명 안 겹치게 맹근다
+        text_filename = f"텍스트메모_{int(time.time())}.txt"
+        with open(os.path.join(SAVE_DIR, text_filename), "w", encoding="utf-8") as f:
+            f.write(shared_text)
+        st.success("텍스트 잘 올라갔데이!")
+        time.sleep(0.5)
+        st.rerun()
+    else:
+        st.warning("마! 뭐라도 좀 적고 올리라.")
+
+st.divider()
+
+# --- 파일 업로드 부분 ---
+st.subheader("📤 파일 올리기")
 uploaded_files = st.file_uploader("파일 여다가 쫌 끌어다 놔라 (여러 개 가능)", accept_multiple_files=True)
 
-# 20MB 제한 빼삐고 바로 저장하는 부분
 if uploaded_files:
     for uploaded_file in uploaded_files:
         with open(os.path.join(SAVE_DIR, uploaded_file.name), "wb") as f:
             f.write(uploaded_file.getbuffer())
     st.success("짜잔! 파일 싹 다 올라갔데이.")
+    time.sleep(0.5)
+    st.rerun()
 
 st.divider()
 
-# 올라간 파일 목록 보여주고 다운로드
-st.subheader("📥 다운로드")
+# --- 목록 보여주기 및 다운로드 ---
+st.subheader("📥 다운로드 및 텍스트 복사")
 files = os.listdir(SAVE_DIR)
-
-# 🔥 요기가 방금 추가한 부분이다! 최신 파일이 맨 위로 오구로 정렬한데이
+# 최신 파일이 맨 위로 오구로 정렬
 files.sort(key=lambda x: os.path.getmtime(os.path.join(SAVE_DIR, x)), reverse=True)
 
 if files:
-    # 하나씩 받기
     for f in files:
         file_path = os.path.join(SAVE_DIR, f)
-        with open(file_path, "rb") as file_data:
-            st.download_button(label=f"⬇️ {f}", data=file_data, file_name=f)
+        
+        # 텍스트 메모는 화면에 바로 보여줘서 복사하기 쉽게 맹근다
+        if f.startswith("텍스트메모_") and f.endswith(".txt"):
+            with open(file_path, "r", encoding="utf-8") as text_file:
+                content = text_file.read()
+            st.write(f"📄 **{f}** (텍스트)")
+            # st.code 쓰면 우측 상단에 복사 버튼이 자동으로 생긴데이
+            st.code(content, language="text")
+        
+        # 일반 파일은 다운로드 버튼
+        else:
+            with open(file_path, "rb") as file_data:
+                st.download_button(label=f"⬇️ {f}", data=file_data, file_name=f)
     
     # 여러 개 한방에 압축해서 받기
     if len(files) > 1:
@@ -67,4 +93,4 @@ if files:
             type="primary"
         )
 else:
-    st.info("아직 올라온 파일이 없네. 빨리 하나 올려보라!")
+    st.info("아직 올라온 기 없네. 빨리 하나 올려보라!")
