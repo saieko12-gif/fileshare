@@ -23,19 +23,16 @@ def cleanup_old_files():
 cleanup_old_files()
 
 st.title("📂 24시간 파일 공유소")
-st.write("마! 최대 20MB까지만 올릴 수 있데이. 여러 개 한 번에 올리고 받을 수 있고, 24시간 지나면 싹 다 날아간데이.")
+st.write("마! 시원하게 스트림릿 기본 용량(200MB)까지 팍팍 올릴 수 있데이. 여러 개 한 번에 올리고 받을 수 있고, 24시간 지나면 싹 다 날아간데이.")
 
 # 다중 파일 업로드
 uploaded_files = st.file_uploader("파일 여다가 쫌 끌어다 놔라 (여러 개 가능)", accept_multiple_files=True)
 
+# 20MB 제한 빼삐고 바로 저장하는 부분
 if uploaded_files:
     for uploaded_file in uploaded_files:
-        # 혹시나 해서 20MB 넘는지 한 번 더 체크
-        if uploaded_file.size > 20 * 1024 * 1024:
-            st.error(f"마! '{uploaded_file.name}' 이거는 20MB 넘는다 아이가! 딴 거 올리라.")
-        else:
-            with open(os.path.join(SAVE_DIR, uploaded_file.name), "wb") as f:
-                f.write(uploaded_file.getbuffer())
+        with open(os.path.join(SAVE_DIR, uploaded_file.name), "wb") as f:
+            f.write(uploaded_file.getbuffer())
     st.success("짜잔! 파일 싹 다 올라갔데이.")
 
 st.divider()
