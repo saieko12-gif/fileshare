@@ -41,6 +41,9 @@ st.divider()
 st.subheader("📥 다운로드")
 files = os.listdir(SAVE_DIR)
 
+# 🔥 요기가 방금 추가한 부분이다! 최신 파일이 맨 위로 오구로 정렬한데이
+files.sort(key=lambda x: os.path.getmtime(os.path.join(SAVE_DIR, x)), reverse=True)
+
 if files:
     # 하나씩 받기
     for f in files:
