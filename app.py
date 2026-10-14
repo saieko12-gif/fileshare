@@ -68,9 +68,10 @@ if files:
         if f.startswith("텍스트메모_") and f.endswith(".txt"):
             with open(file_path, "r", encoding="utf-8") as text_file:
                 content = text_file.read()
-            st.write(f"📄 **{f}** (텍스트)")
-            # st.code 쓰면 우측 상단에 복사 버튼이 자동으로 생긴데이
-            st.code(content, language="text")
+            
+            # 🔥 요기가 바뀐 부분이다! st.expander 써가 평소엔 촥 접어둔데이
+            with st.expander(f"📄 텍스트 메모 (눌러서 내용 보기) - {f}"):
+                st.code(content, language="text")
         
         # 일반 파일은 다운로드 버튼
         else:
