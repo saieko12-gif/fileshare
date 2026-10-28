@@ -21,14 +21,13 @@ def cleanup_old_files():
 cleanup_old_files()
 
 st.title("📂 24시간 파일 & 텍스트 공유소")
-st.write("마! 파일도 올리고 텍스트도 복붙해서 나눌 수 있데이. 24시간 지나면 싹 다 날아간데이.")
+st.write("마! 파일도 올리고 텍스트나 이미지도 복붙해서 나눌 수 있데이. 24시간 지나면 싹 다 날아간데이.")
 
 # --- 텍스트 공유 부분 ---
 st.subheader("📝 텍스트 공유하기")
 shared_text = st.text_area("공유할 텍스트 여다가 팍팍 적어라", height=100)
 if st.button("텍스트 올리기"):
     if shared_text.strip():
-        # 저장할 때 시간 달아서 파일명 안 겹치게 맹근다
         text_filename = f"텍스트메모_{int(time.time())}.txt"
         with open(os.path.join(SAVE_DIR, text_filename), "w", encoding="utf-8") as f:
             f.write(shared_text)
@@ -41,7 +40,8 @@ if st.button("텍스트 올리기"):
 st.divider()
 
 # --- 파일 업로드 부분 ---
-st.subheader("📤 파일 올리기")
+st.subheader("📤 파일 (또는 복사한 이미지) 올리기")
+st.caption("💡 캡처한 이미지 복사한 상태로 아래 네모 박스 누르고 Ctrl+V 하면 바로 올라간데이!")
 uploaded_files = st.file_uploader("파일 여다가 쫌 끌어다 놔라 (여러 개 가능)", accept_multiple_files=True)
 
 if uploaded_files:
@@ -55,7 +55,7 @@ if uploaded_files:
 st.divider()
 
 # --- 목록 보여주기 및 다운로드 ---
-st.subheader("📥 다운로드 및 텍스트 복사")
+st.subheader("📥 다운로드 및 복사")
 files = os.listdir(SAVE_DIR)
 # 최신 파일이 맨 위로 오구로 정렬
 files.sort(key=lambda x: os.path.getmtime(os.path.join(SAVE_DIR, x)), reverse=True)
@@ -64,19 +64,26 @@ if files:
     for f in files:
         file_path = os.path.join(SAVE_DIR, f)
         
-        # 텍스트 메모는 화면에 바로 보여줘서 복사하기 쉽게 맹근다
+        # 1. 텍스트 메모일 때
         if f.startswith("텍스트메모_") and f.endswith(".txt"):
             with open(file_path, "r", encoding="utf-8") as text_file:
                 content = text_file.read()
-            
-            # 🔥 요기가 바뀐 부분이다! st.expander 써가 평소엔 촥 접어둔데이
             with st.expander(f"📄 텍스트 메모 (눌러서 내용 보기) - {f}"):
                 st.code(content, language="text")
+                
+        # 2. 이미지 파일일 때 (여기가 추가된 부분이다!)
+        elif f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp')):
+            with st.expander(f"🖼️ 이미지 (눌러서 그림 보기) - {f}"):
+                st.image(file_path) # 화면에 그림 띄워주기
+                st.caption("👆 그림 위에서 '우클릭 -> 이미지 복사' 하면 된데이!")
+                # 그래도 혹시 원본으로 받고 싶을까 봐 다운로드 버튼도 냄겨놨다
+                with open(file_path, "rb") as file_data:
+                    st.download_button(label=f"⬇️ 원본 이미지 다운로드", data=file_data, file_name=f, key=f"img_{f}")
         
-        # 일반 파일은 다운로드 버튼
+        # 3. 그 외 일반 파일일 때
         else:
             with open(file_path, "rb") as file_data:
-                st.download_button(label=f"⬇️ {f}", data=file_data, file_name=f)
+                st.download_button(label=f"⬇️ {f}", data=file_data, file_name=f, key=f"file_{f}")
     
     # 여러 개 한방에 압축해서 받기
     if len(files) > 1:
